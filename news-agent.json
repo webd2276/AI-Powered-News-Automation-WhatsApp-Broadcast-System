@@ -1,0 +1,471 @@
+{
+  "name": "news-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "fb51cf3d-1d3b-432d-a71f-19fe9330917f",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://feeds.bbci.co.uk/news/rss.xml",
+        "options": {}
+      },
+      "id": "1b6fce75-aa8e-4133-9775-b4bf0dcc523e",
+      "name": "BBC News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "f9d3bf21-915a-497f-840f-61bc56a51cad",
+      "name": "Combine All Feeds",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        688,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.dawn.com/feeds/home",
+        "options": {}
+      },
+      "id": "39a4699c-3034-4540-8b63-d75301d6967b",
+      "name": "Dawn News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://arynews.tv/feed/",
+        "options": {}
+      },
+      "id": "0c3e43b5-d8bc-4d5f-ba8d-1fb68791280c",
+      "name": "ARY News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://feeds.feedburner.com/geo/headlines",
+        "options": {}
+      },
+      "id": "b36e12aa-d877-4b38-960d-88e6cc8e89ad",
+      "name": "Geo News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.aljazeera.com/xml/rss/all.xml",
+        "options": {}
+      },
+      "id": "6eb8e5cf-870b-4a52-ab67-75591d5a0bcc",
+      "name": "Al Jazeera News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "or",
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Breaking",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Pakistan",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Attack",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "AI",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Economy",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d80a264-c916-452c-9618-e853e42dc034",
+      "name": "Filter Breaking News",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "link",
+        "options": {}
+      },
+      "id": "28052763-b2c3-4aa0-9777-93ec46c7bbae",
+      "name": "Remove Duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "message",
+              "value": "=🔥 *Breaking News*\n\n{{ $json.aiSummary }}\n\n📰 {{ $json.title }}\n\n🔗 {{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "734df22f-68d0-4b8a-812f-eb34c86757df",
+      "name": "Format WhatsApp Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1936,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a real-time news intelligence agent.\n\nTask:\n- Read the news below\n- Summarize it in exactly 2 short, engaging lines\n- Keep it clear, factual, and impactful\n- Avoid fluff and repetition\n\nNews:\n{{ $json.title }} {{ $json.contentSnippet || $json.content }}\n\nOutput:\n2-line summary only."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxOutputTokens": 100,
+          "temperature": 0.7
+        }
+      },
+      "id": "cdd45705-0243-45fa-b603-c630fe65e10c",
+      "name": "Gemini AI Summarize",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        592
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "fHo0BGxZXdofd2VV",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "aiSummary",
+              "value": "={{ $json.response }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "title",
+              "value": "={{ $(\"Remove Duplicates\").item.json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "link",
+              "value": "={{ $(\"Remove Duplicates\").item.json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2eca1d49-8c92-4017-8e24-e1d102a2b022",
+      "name": "Extract AI Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://waapi.app/api/v1/instances/90463/client/action/send-message",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"Authorization\": \"Bearer O6zCUOpyd4On5dDWefTEdNYKz394gp7y0T2170yJ427bbcfa\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"to\": \"+92302387168\",\n  \"message\": \"Hello from n8n 🚀\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2144,
+        592
+      ],
+      "id": "a9294a27-dded-46b6-897a-92df39ce8014",
+      "name": "HTTP Request",
+      "retryOnFail": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "BBC News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Dawn News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ARY News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Geo News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Al Jazeera News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BBC News": {
+      "main": [
+        [
+          {
+            "node": "Combine All Feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Feeds": {
+      "main": [
+        [
+          {
+            "node": "Filter Breaking News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dawn News": {
+      "main": [
+        [
+          {
+            "node": "Combine All Feeds",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "ARY News": {
+      "main": [
+        [
+          {
+            "node": "Combine All Feeds",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Geo News": {
+      "main": [
+        [
+          {
+            "node": "Combine All Feeds",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Al Jazeera News": {
+      "main": [
+        [
+          {
+            "node": "Combine All Feeds",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Filter Breaking News": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Summarize": {
+      "main": [
+        [
+          {
+            "node": "Extract AI Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract AI Summary": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d388b730-bcf5-45ac-a573-4aa691125141",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a4195b9699c1adbcd5ad1812cff72fa32959be4abbe8683e17cf965334914967"
+  },
+  "id": "iBoBuX4mxYUM7Odz",
+  "tags": []
+}
